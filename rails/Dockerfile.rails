@@ -1,0 +1,111 @@
+# NOTE: This image should be used for development and test only
+
+# Packages:
+# * Ruby
+# * Common libs and apps required by RoR and many popular gems
+# * Node.js + phantomjs (required by the poltergeist gem)
+
+FROM debian:latest
+
+# Set package versions
+ARG node_version=8.11.1
+ARG ruby_major=2.5
+ARG ruby_version=2.5.1
+
+# Set User
+ARG UNAME=developer
+ARG UID=1000
+ARG GID=1000
+RUN groupadd -g $GID $UNAME
+RUN useradd -m -u $UID -g $GID -s /bin/bash $UNAME
+
+MAINTAINER Felipe Jordão Almeida Prado Mattosinho <felipe.japm@gmail.com>
+
+#### Install Common Libs and Apps required by RoR and popular gems
+RUN apt-get update --fix-missing && apt-get install -qy build-essential \
+wget \
+apt-transport-https \
+locales \
+openssl \
+graphviz \
+libreadline-dev \
+curl \
+libcurl4-openssl-dev \
+libssl-dev \
+libapr1-dev \
+libaprutil1-dev \
+libx11-dev \
+libffi-dev \
+libpq-dev \
+tcl-dev \
+tk-dev \
+git-core \
+zlib1g zlib1g-dev \
+libyaml-dev \
+libxml2-dev \
+libxslt-dev \
+autoconf \
+libc-dev \
+ncurses-dev \
+libqt4-dev \
+xvfb \
+wkhtmltopdf \
+libmagick++-dev \
+libmagickwand-dev \
+imagemagick \
+python \
+libfontconfig
+
+RUN mkdir /build
+WORKDIR /build
+
+# Install Ruby
+WORKDIR /build
+RUN wget -qO- http://cache.ruby-lang.org/pub/ruby/$ruby_major/ruby-$ruby_version.tar.gz | tar xvz &&\
+cd ruby-$ruby_version &&\
+./configure --disable-install-doc --disable-install-rdoc --disable-install-capi &&\
+make &&\
+make install
+
+# Install Node
+RUN wget http://nodejs.org/dist/v$node_version/node-v$node_version.tar.gz
+RUN tar -xzf node-v$node_version.tar.gz
+WORKDIR /build/node-v$node_version
+RUN ./configure && make && make install
+
+# Install PhantomJS
+RUN npm install phantomjs
+
+# Install Yarn
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+RUN apt-get update && apt-get install -qy libuv1
+RUN apt-get install --no-install-recommends yarn
+
+RUN yarn global add phantomjs-prebuilt 
+
+RUN locale-gen en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL C
+
+# Clean build dirs
+RUN rm -rf /build
+RUN rm -rf node-v$node_version
+
+RUN echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list
+RUN wget https://dl-ssl.google.com/linux/linux_signing_key.pub
+RUN apt-key add linux_signing_key.pub
+RUN apt-get update
+RUN apt-get install -qy google-chrome-stable
+RUN apt-get install -qy sudo
+RUN apt-get install -qy libssl1.0-dev
+
+# Install Bundler
+RUN gem install bundler --no-rdoc --no-ri
+ENV BUNDLE_PATH /app/.bundle
+RUN mkdir /app
+WORKDIR /app
+COPY bash.bashrc /etc/bash.bashrc
+USER $UNAME
+ENTRYPOINT ["bundle", "exec"]

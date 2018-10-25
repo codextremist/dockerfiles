@@ -1,0 +1,20 @@
+FROM ubuntu:16.04
+
+ARG PHP_MY_ADMIN_VERSION=4.8.3
+
+RUN apt-get --fix-missing update
+RUN apt-get install -y curl apache2 php libapache2-mod-php php-mcrypt php-mysql php-cli
+RUN echo "mysql-server-5.5 mysql-server/root_password password root" | debconf-set-selections
+RUN echo "mysql-server-5.5 mysql-server/root_password_again password root" | debconf-set-selections
+RUN apt-get install -y mysql-server
+RUN apt-get install -y php-all-dev php-gmp php-gd php-curl php-cgi
+
+RUN echo "ServerName 0.0.0.0" >> /etc/apache2/apache2.conf
+
+WORKDIR /var/www/html
+RUN apt-get install -y wget unzip
+RUN wget https://files.phpmyadmin.net/phpMyAdmin/$PHP_MY_ADMIN_VERSION/phpMyAdmin-$PHP_MY_ADMIN_VERSION-all-languages.zip
+RUN unzip phpMyAdmin-$PHP_MY_ADMIN_VERSION-all-languages.zip
+RUN rm phpMyAdmin-$PHP_MY_ADMIN_VERSION-all-languages.zip
+RUN mv phpMyAdmin-$PHP_MY_ADMIN_VERSION-all-languages phpMyAdmin
+COPY config.inc.php /var/www/html/phpMyAdmin/config.inc.php

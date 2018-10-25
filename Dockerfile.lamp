@@ -1,0 +1,9 @@
+FROM ubuntu:16.04
+
+RUN apt-get --fix-missing update
+RUN apt-get install -y curl apache2 php libapache2-mod-php php-mcrypt php-mysql php-cli
+RUN echo "mysql-server-5.5 mysql-server/root_password password root" | debconf-set-selections
+RUN echo "mysql-server-5.5 mysql-server/root_password_again password root" | debconf-set-selections
+RUN apt-get install -y mysql-server
+RUN apt-get install -y php-all-dev php-gmp php-gd php-curl php-cgi
+RUN echo "ServerName 0.0.0.0" >> /etc/apache2/apache2.conf

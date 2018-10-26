@@ -17,4 +17,9 @@ RUN wget https://files.phpmyadmin.net/phpMyAdmin/$PHP_MY_ADMIN_VERSION/phpMyAdmi
 RUN unzip phpMyAdmin-$PHP_MY_ADMIN_VERSION-all-languages.zip
 RUN rm phpMyAdmin-$PHP_MY_ADMIN_VERSION-all-languages.zip
 RUN mv phpMyAdmin-$PHP_MY_ADMIN_VERSION-all-languages phpMyAdmin
+EXPOSE 80
 COPY config.inc.php /var/www/html/phpMyAdmin/config.inc.php
+COPY apache2.sh apache2.sh
+COPY mysql.sh mysql.sh
+COPY spawner spawner
+CMD ./spawner

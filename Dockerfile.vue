@@ -8,12 +8,12 @@ FROM debian:latest
 
 # Set package versions
 ARG node_version=8.11.1
+ARG YARN_VERSION=1.12.3
 
 # Set User
 ARG UNAME=developer
 ARG UID=1000
 ARG GID=1000
-ARG YARN_VERSION=1.11.0
 RUN groupadd -g $GID $UNAME
 RUN useradd -m -u $UID -g $GID -s /bin/bash $UNAME
 
@@ -28,7 +28,6 @@ openssl \
 curl \
 autoconf \
 python \
-git \
 libc-dev
 
 RUN mkdir /build
@@ -40,11 +39,6 @@ RUN tar -xzf node-v$node_version.tar.gz
 WORKDIR /build/node-v$node_version
 RUN ./configure && make && make install
 
-# Install Yarn
-USER $UNAME
-RUN curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version $YARN_VERSION
-
-USER root 
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
@@ -62,7 +56,20 @@ RUN apt-get install -qy google-chrome-stable
 RUN apt-get install -qy sudo
 RUN apt-get install -qy libssl1.0-dev
 
+# Install Yarn
+USER $UNAME
+COPY bash.bashrc /home/$UNAME/.bashrc
+RUN curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version $YARN_VERSION
+
+USER root
+# Install vue cli globally
+RUN npm install -g @vue/cli
+
+# Clean build dirs
+RUN rm -rf /build
+RUN rm -rf node-v$node_version
+
 RUN mkdir /app
 WORKDIR /app
 USER $UNAME
-ENTRYPOINT ["yarn"]
+ENTRYPOINT ["vue"]

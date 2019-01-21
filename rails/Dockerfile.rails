@@ -57,7 +57,6 @@ python \
 libfontconfig
 
 RUN mkdir /build
-WORKDIR /build
 
 # Install Ruby
 WORKDIR /build
@@ -90,7 +89,7 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL C
 
 # Clean build dirs
-RUN rm -rf /build
+# RUN rm -rf /build
 RUN rm -rf node-v$node_version
 
 RUN echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list
@@ -100,6 +99,17 @@ RUN apt-get update
 RUN apt-get install -qy google-chrome-stable
 RUN apt-get install -qy sudo
 RUN apt-get install -qy libssl1.0-dev
+
+RUN apt-get install unzip
+
+# Install ChromeDriver
+RUN wget https://chromedriver.storage.googleapis.com/2.44/chromedriver_linux64.zip
+RUN unzip chromedriver_linux64.zip
+RUN mv chromedriver /usr/bin/chromedriver
+RUN chown developer:developer /usr/bin/chromedriver
+RUN chmod +x /usr/bin/chromedriver
+
+RUN rm -rf /build
 
 # Install Bundler
 RUN gem install bundler --no-rdoc --no-ri
